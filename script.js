@@ -3,10 +3,11 @@ let lastSeed = "";
 let lastImageUrl = "";
 let historyList = [];
 
-function getRandomSeed() { return Math.floor(Math.random() * 1e9); }
+function getRandomSeed() {
+  return Math.floor(Math.random() * 1e9);
+}
 
 async function translateIfCyrillic(text) {
-  // если есть кириллица
   if (!/[А-Яа-яЁё]/.test(text)) return text;
   const res = await fetch(
     `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${encodeURIComponent(text)}`
@@ -37,32 +38,31 @@ async function showImage(url, seed, prompt, enhanced) {
     resDiv.innerHTML = `<p>Сид: <strong>${seed}</strong>${enhanced ? " (улучшено)" : ""}</p>`;
     resDiv.appendChild(img);
 
-    // кнопка загрузки поверх
-const link = document.createElement("div");
-link.className = "download-overlay";
-link.textContent = "Скачать PNG";
-link.onclick = async () => {
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "image.png";
-    a.click();
-    URL.revokeObjectURL(a.href);
-  } catch {
-    alert("Не удалось скачать изображение.");
-  }
-};
-resDiv.appendChild(link);
+    const overlay = document.createElement("div");
+    overlay.className = "download-overlay";
+    overlay.textContent = "Скачать PNG";
+    overlay.onclick = async () => {
+      try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "image.png";
+        a.click();
+        URL.revokeObjectURL(a.href);
+      } catch {
+        alert("Не удалось скачать изображение.");
+      }
+    };
+    resDiv.appendChild(overlay);
 
     lastImageUrl = url;
     enhBtn.disabled = false;
     lastPrompt = prompt;
     lastSeed = seed;
 
-    addToHistory({ url, seed, prompt, enhanced });
-
+    const item = { url, seed, prompt, enhanced, id: Date.now() };
+    addToHistory(item);
     saveHistoryToStorage();
   };
 
@@ -81,50 +81,44 @@ resDiv.appendChild(link);
 }
 
 function addToHistory(item) {
-  const histDiv = document.getElementById("history");
-  const div = document.createElement("div");
-  div.className = "history-item";
-  div.dataset.id = Date.now();
-  div.innerHTML = `
-    <button title="Удалить">×</button>
-    <img src="${item.url}"><p><strong>Prompt:</strong> ${item.prompt}</p><p><strong>Сид:</strong> ${item.seed}${item.enhanced ? " (улучшено)" : ""}</p>
-  `;
-  div.querySelector("button").onclick = () => {
-    histDiv.removeChild(div);
-    removeHistoryItem(div.dataset.id);
-  };
-  histDiv.prepend(div);
+  historyList.unshift(item);
+  renderHistory();
+}
+
+function saveHistoryToStorage() {
+  localStorage.setItem("imgHistory", JSON.stringify(historyList));
 }
 
 function loadHistoryFromStorage() {
   const saved = localStorage.getItem("imgHistory");
-  if (!saved) return [];
+  if (!saved) return;
   try {
-    return JSON.parse(saved);
+    historyList = JSON.parse(saved);
   } catch {
-    return [];
+    historyList = [];
   }
 }
 
 function renderHistory() {
-  const arr = loadHistoryFromStorage();
-  arr.forEach(item => addToHistory(item));
-}
-
-function saveHistoryToStorage() {
-  const items = Array.from(document.getElementById("history").children).map(div => ({
-    url: div.querySelector("img").src,
-    prompt: div.querySelector("p strong + text").textContent || "", // fallback
-    seed: div.querySelector("p:nth-child(3)").textContent,
-    enhanced: div.querySelector("p:nth-child(3)").textContent.includes("улучшено"),
-    id: div.dataset.id
-  }));
-  localStorage.setItem("imgHistory", JSON.stringify(items));
-}
-
-function removeHistoryItem(id) {
-  const arr = loadHistoryFromStorage().filter(it => it.id != id);
-  localStorage.setItem("imgHistory", JSON.stringify(arr));
+  const histDiv = document.getElementById("history");
+  histDiv.innerHTML = "";
+  historyList.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "history-item";
+    div.dataset.id = item.id;
+    div.innerHTML = `
+      <button title="Удалить">×</button>
+      <img src="${item.url}">
+      <p><strong>Prompt:</strong> ${item.prompt}</p>
+      <p><strong>Сид:</strong> ${item.seed}${item.enhanced ? " (улучшено)" : ""}</p>
+    `;
+    div.querySelector("button").onclick = () => {
+      historyList = historyList.filter(x => x.id != item.id);
+      saveHistoryToStorage();
+      renderHistory();
+    };
+    histDiv.prepend(div);
+  });
 }
 
 document.getElementById("generateBtn").addEventListener("click", async () => {
@@ -143,5 +137,6 @@ document.getElementById("enhanceBtn").addEventListener("click", () => {
 });
 
 window.addEventListener("DOMContentLoaded", () => {
+  loadHistoryFromStorage();
   renderHistory();
 });
