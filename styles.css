@@ -68,7 +68,30 @@ img {
   color: #ccc;
 }
 
-#enhanceBtn[disabled] {
+#enhanceBtn[disabled],
+#downloadBtn[disabled] {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+#history {
+  margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.history-item {
+  background: #1a1a1a;
+  padding: 10px;
+  border-radius: 10px;
+  max-width: 200px;
+  font-size: 12px;
+  color: #ccc;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
+}
+
+.history-item img {
+  max-width: 100%;
+  border-radius: 5px;
 }
