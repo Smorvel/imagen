@@ -1,6 +1,7 @@
 let lastPrompt = "";
 let lastSeed = "";
 let lastImageUrl = "";
+let historyList = [];
 
 function getRandomSeed() { return Math.floor(Math.random() * 1e9); }
 
