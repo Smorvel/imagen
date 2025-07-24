@@ -67,3 +67,8 @@ img {
   text-align: center;
   color: #ccc;
 }
+
+#enhanceBtn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
