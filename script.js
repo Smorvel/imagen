@@ -2,100 +2,97 @@ let lastPrompt = "";
 let lastSeed = "";
 let lastImageUrl = "";
 
-function getRandomSeed() {
-  return Math.floor(Math.random() * 1e9);
+async function translateIfNeeded(promptRaw) {
+  const checkbox = document.getElementById('translate');
+  if (!checkbox.checked) return promptRaw;
+
+  // автоматическое определение языка + перевод
+  const res = await fetch('https://libretranslate.com/translate', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      q: promptRaw,
+      source: 'auto',
+      target: 'en',
+      format: 'text'
+    })
+  });
+  if (!res.ok) return promptRaw;
+  const data = await res.json();
+  return data.translatedText;
 }
 
 function buildImageUrl(prompt, seed, enhance = false) {
-  const encodedPrompt = encodeURIComponent(prompt);
-  let url = `https://image.pollinations.ai/prompt/${encodedPrompt}?seed=${seed}&nologo=true`;
-  if (enhance) url += `&enhance=true`;
+  const encoded = encodeURIComponent(prompt);
+  let url = `https://image.pollinations.ai/prompt/${encoded}?seed=${seed}&nologo=true`;
+  if (enhance) url += '&enhance=true';
   return url;
 }
 
-async function maybeTranslate(prompt) {
-  const useTranslation = document.getElementById('translate').checked;
-  if (!useTranslation) return prompt;
+async function showImage(url, seed, prompt, enhanced) {
+  const resDiv = document.getElementById('result');
+  const enhBtn = document.getElementById('enhanceBtn');
+  const dlBtn = document.getElementById('downloadBtn');
 
-  const url = `https://text.pollinations.ai/переведи текст на английский "${prompt}", без лишнего текста, только перевод напиши и все`;
-  const response = await fetch(url);
-  return await response.text();
-}
-
-async function showImage(url, seed, prompt, isEnhanced = false) {
-  const resultDiv = document.getElementById('result');
-  const enhanceBtn = document.getElementById('enhanceBtn');
-  const downloadBtn = document.getElementById('downloadBtn');
-
-  resultDiv.innerHTML = `<p>Сид: <strong>${seed}</strong>${isEnhanced ? ' (улучшено)' : ''}</p><p>Загрузка изображения...</p>`;
-  enhanceBtn.disabled = true;
-  downloadBtn.disabled = true;
+  resDiv.innerHTML = `<p>Сид: <strong>${seed}</strong>${enhanced ? ' (улучшено)' : ''}</p><p>Загрузка...</p>`;
+  enhBtn.disabled = true;
+  dlBtn.disabled = true;
 
   const img = new Image();
   img.src = url;
-
   img.onload = () => {
-    resultDiv.innerHTML = `<p>Сид: <strong>${seed}</strong>${isEnhanced ? ' (улучшено)' : ''}</p>`;
-    resultDiv.appendChild(img);
-    enhanceBtn.disabled = false;
-    downloadBtn.disabled = false;
+    resDiv.innerHTML = `<p>Сид: <strong>${seed}</strong>${enhanced ? ' (улучшено)' : ''}</p>`;
+    resDiv.appendChild(img);
+    enhBtn.disabled = false;
+    dlBtn.disabled = false;
     lastImageUrl = img.src;
-
-    addToHistory(img.src, seed, prompt, isEnhanced);
+    addToHistory(img.src, seed, prompt, enhanced);
   };
-
   img.onerror = async () => {
     try {
-      const res = await fetch(url);
-      if (res.status === 502) {
-        resultDiv.innerHTML = 'Ошибка CloudFlare (502 Bad Gateway)';
+      const resp = await fetch(url);
+      if (resp.status === 502) {
+        resDiv.innerHTML = 'Ошибка CloudFlare (502)';
       } else {
-        resultDiv.innerHTML = 'Ошибка при загрузке изображения.';
+        resDiv.innerHTML = 'Ошибка при загрузке изображения.';
       }
     } catch {
-      resultDiv.innerHTML = 'Ошибка при загрузке изображения.';
+      resDiv.innerHTML = 'Ошибка при загрузке изображения.';
     }
   };
 }
 
-function addToHistory(url, seed, prompt, isEnhanced) {
-  const history = document.getElementById('history');
-  const container = document.createElement('div');
-  container.className = 'history-item';
-  container.innerHTML = `
-    <img src="${url}" alt="история" />
-    <p><strong>Промт:</strong> ${prompt}</p>
-    <p><strong>Сид:</strong> ${seed}${isEnhanced ? ' (улучшено)' : ''}</p>
-  `;
-  history.prepend(container);
+function addToHistory(url, seed, prompt, enhanced) {
+  const hist = document.getElementById('history');
+  const div = document.createElement('div');
+  div.className = 'history-item';
+  div.innerHTML = `<img src="${url}"><p><strong>Prompt:</strong> ${prompt}</p><p><strong>Сид:</strong> ${seed}${enhanced?' (улучшено)':''}</p>`;
+  hist.prepend(div);
 }
 
+function getRandomSeed() { return Math.floor(Math.random()*1e9); }
+
 document.getElementById('generateBtn').addEventListener('click', async () => {
-  const promptInput = document.getElementById('prompt');
-  const seedInput = document.getElementById('seed');
-
-  const promptRaw = promptInput.value.trim();
-  const seed = seedInput.value.trim() || getRandomSeed();
-  const prompt = await maybeTranslate(promptRaw);
-
-  lastPrompt = prompt;
+  const pr = document.getElementById('prompt').value.trim();
+  if (!pr) return;
+  const seed = document.getElementById('seed').value.trim() || getRandomSeed();
+  const promptTranslated = await translateIfNeeded(pr);
+  lastPrompt = promptTranslated;
   lastSeed = seed;
-
-  const url = buildImageUrl(prompt, seed);
-  showImage(url, seed, prompt, false);
+  const url = buildImageUrl(promptTranslated, seed);
+  showImage(url, seed, promptTranslated, false);
 });
 
 document.getElementById('enhanceBtn').addEventListener('click', () => {
   if (!lastPrompt || !lastSeed) return;
-
   const url = buildImageUrl(lastPrompt, lastSeed, true);
   showImage(url, lastSeed, lastPrompt, true);
 });
 
 document.getElementById('downloadBtn').addEventListener('click', () => {
   if (!lastImageUrl) return;
-  const link = document.createElement('a');
-  link.href = lastImageUrl;
-  link.download = 'image.png';
-  link.click();
+  const a = document.createElement('a');
+  a.href = lastImageUrl;
+  a.download = 'image.png';
+  a.click();
 });
