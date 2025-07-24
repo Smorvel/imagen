@@ -37,12 +37,23 @@ async function showImage(url, seed, prompt, enhanced) {
     resDiv.appendChild(img);
 
     // кнопка загрузки поверх
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "image.png";
-    link.className = "download-overlay";
-    link.textContent = "Скачать PNG";
-    resDiv.appendChild(link);
+const link = document.createElement("div");
+link.className = "download-overlay";
+link.textContent = "Скачать PNG";
+link.onclick = async () => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "image.png";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch {
+    alert("Не удалось скачать изображение.");
+  }
+};
+resDiv.appendChild(link);
 
     lastImageUrl = url;
     enhBtn.disabled = false;
