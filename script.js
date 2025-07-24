@@ -6,20 +6,12 @@ async function translateIfNeeded(promptRaw) {
   const checkbox = document.getElementById('translate');
   if (!checkbox.checked) return promptRaw;
 
-  // автоматическое определение языка + перевод
-  const res = await fetch('https://libretranslate.com/translate', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      q: promptRaw,
-      source: 'auto',
-      target: 'en',
-      format: 'text'
-    })
-  });
+  const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${encodeURIComponent(promptRaw)}`);
   if (!res.ok) return promptRaw;
   const data = await res.json();
-  return data.translatedText;
+  // структура: [[["translatedText", ...], ...], ...]
+  const translated = data[0]?.[0]?.[0];
+  return translated || promptRaw;
 }
 
 function buildImageUrl(prompt, seed, enhance = false) {
@@ -40,6 +32,7 @@ async function showImage(url, seed, prompt, enhanced) {
 
   const img = new Image();
   img.src = url;
+
   img.onload = () => {
     resDiv.innerHTML = `<p>Сид: <strong>${seed}</strong>${enhanced ? ' (улучшено)' : ''}</p>`;
     resDiv.appendChild(img);
@@ -48,6 +41,7 @@ async function showImage(url, seed, prompt, enhanced) {
     lastImageUrl = img.src;
     addToHistory(img.src, seed, prompt, enhanced);
   };
+
   img.onerror = async () => {
     try {
       const resp = await fetch(url);
@@ -66,11 +60,14 @@ function addToHistory(url, seed, prompt, enhanced) {
   const hist = document.getElementById('history');
   const div = document.createElement('div');
   div.className = 'history-item';
-  div.innerHTML = `<img src="${url}"><p><strong>Prompt:</strong> ${prompt}</p><p><strong>Сид:</strong> ${seed}${enhanced?' (улучшено)':''}</p>`;
+  div.innerHTML = `
+    <img src="${url}" alt="история">
+    <p><strong>Промт:</strong> ${prompt}</p>
+    <p><strong>Сид:</strong> ${seed}${enhanced ? ' (улучшено)' : ''}</p>`;
   hist.prepend(div);
 }
 
-function getRandomSeed() { return Math.floor(Math.random()*1e9); }
+function getRandomSeed() { return Math.floor(Math.random() * 1e9); }
 
 document.getElementById('generateBtn').addEventListener('click', async () => {
   const pr = document.getElementById('prompt').value.trim();
