@@ -8,8 +8,8 @@ function generateImage() {
   const resultDiv = document.getElementById('result');
 
   const seed = seedInput !== "" ? seedInput : getRandomSeed();
-  const encodedPrompt = encodeURIComponent(`${prompt} --seed ${seed}`);
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}`;
+  const encodedPrompt = encodeURIComponent(prompt);
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?seed=${seed}&nologo=true`;
 
   resultDiv.innerHTML = `<p>Сид: <strong>${seed}</strong></p><p>Загрузка изображения...</p>`;
 
