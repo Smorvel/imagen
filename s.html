@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Генератор изображений (Pollinations)</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin: 50px; }
+    input, button { padding: 10px; font-size: 16px; width: 300px; }
+    img { margin-top: 20px; max-width: 100%; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>Генератор изображений через Pollinations</h1>
+  <input type="text" id="prompt" placeholder="Введи описание изображения">
+  <br><br>
+  <button onclick="generateImage()">Сгенерировать</button>
+  <div id="result"></div>
+
+  <script>
+    async function generateImage() {
+      const prompt = document.getElementById('prompt').value;
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = 'Загрузка...';
+
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?nologo=true`;
+      const img = document.createElement('img');
+      img.src = url;
+      img.onload = () => {
+        resultDiv.innerHTML = '';
+        resultDiv.appendChild(img);
+      };
+      img.onerror = () => {
+        resultDiv.innerHTML = 'Ошибка при загрузке изображения.';
+      };
+    }
+  </script>
+</body>
+</html>
