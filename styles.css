@@ -33,7 +33,7 @@ button:disabled {
 #result { position: relative; margin-top: 20px; text-align: center; }
 
 #result img {
-  max-width: 100%; border-radius: 8px;
+  max-width: 50%; border-radius: 8px;
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
 }
 
