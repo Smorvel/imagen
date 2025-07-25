@@ -30,7 +30,7 @@ button:disabled {
   opacity: 0.5; cursor: not-allowed;
 }
 
-#result { position: relative; margin-top: 20px; text-align: center; }
+#result { position: relative; margin-top: 20px; text-align: center;  width: 800px;}
 
 #result img {
   max-width: 50%; border-radius: 8px;
