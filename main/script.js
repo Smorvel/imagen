@@ -120,7 +120,7 @@ function getRandomSeed() {
 async function translateIfCyrillic(text) {
   if (!/[А-Яа-яЁё]/.test(text)) return text;
   const res = await fetch(
-    `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${encodeURIComponent(text)}`
+    `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ru&tl=en&dt=t&q=${encodeURIComponent(text)}`
   );
   if (!res.ok) return text;
   const data = await res.json();
