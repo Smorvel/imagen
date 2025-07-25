@@ -33,18 +33,6 @@ function openDB() {
   });
 }
 
-// Сохранить всё в IndexedDB (перезаписывает всю историю)
-async function saveHistoryToDB(historyArr) {
-  const db = await openDB();
-  const tx = db.transaction(STORE_NAME, "readwrite");
-  const store = tx.objectStore(STORE_NAME);
-  await clearHistoryDB();
-  for (const item of historyArr) {
-    store.put(item);
-  }
-  return tx.complete || tx.done || tx;
-}
-
 // Получить всю историю из IndexedDB
 async function loadHistoryFromDB() {
   const db = await openDB();
@@ -70,11 +58,29 @@ async function loadHistoryFromDB() {
 
 // Добавить элемент в IndexedDB (и обрезать лишнее)
 async function addToHistoryDB(item) {
-  let arr = await loadHistoryFromDB();
-  arr.unshift(item);
-  if (arr.length > MAX_HISTORY) arr = arr.slice(0, MAX_HISTORY);
-  await saveHistoryToDB(arr);
-  historyList = arr;
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  const store = tx.objectStore(STORE_NAME);
+  store.put(item);
+  await new Promise((resolve, reject) => {
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+
+  // Ограничение на количество записей: если стало больше MAX_HISTORY — удаляем самые старые
+  let all = await loadHistoryFromDB();
+  if (all.length > MAX_HISTORY) {
+    const idsToDelete = all.slice(MAX_HISTORY).map(x => x.id);
+    const txDel = db.transaction(STORE_NAME, "readwrite");
+    const storeDel = txDel.objectStore(STORE_NAME);
+    idsToDelete.forEach(id => storeDel.delete(id));
+    await new Promise((resolve, reject) => {
+      txDel.oncomplete = resolve;
+      txDel.onerror = () => reject(txDel.error);
+    });
+    all = all.slice(0, MAX_HISTORY);
+  }
+  historyList = all;
   renderHistory();
 }
 
@@ -84,18 +90,12 @@ async function removeFromHistoryDB(id) {
   const tx = db.transaction(STORE_NAME, "readwrite");
   const store = tx.objectStore(STORE_NAME);
   store.delete(id);
-  await tx.complete || tx.done || tx;
+  await new Promise((resolve, reject) => {
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
   historyList = await loadHistoryFromDB();
   renderHistory();
-}
-
-// Очистить всё хранилище IndexedDB
-async function clearHistoryDB() {
-  const db = await openDB();
-  const tx = db.transaction(STORE_NAME, "readwrite");
-  const store = tx.objectStore(STORE_NAME);
-  store.clear();
-  return tx.complete || tx.done || tx;
 }
 
 // --- base64 helpers ---
@@ -255,8 +255,6 @@ function renderHistory() {
     const div = document.createElement("div");
     div.className = "history-item";
     div.dataset.id = item.id;
-
-    // Корректная картинка, шаблон и обработчик
     div.innerHTML = `
       <button title="Удалить">×</button>
       <div class="history-img-wrap" style="width:100%;text-align:center;">
@@ -268,10 +266,8 @@ function renderHistory() {
       <p><strong>Prompt:</strong> ${item.prompt}</p>
       <p><strong>Сид:</strong> ${item.seed}${item.enhanced ? " (улучшено)" : ""}</p>
     `;
-    // обработчик удаления
     div.querySelector("button").onclick = async () => {
       await removeFromHistoryDB(item.id);
-      historyList = await loadHistoryFromDB();
       const maxPagesNow = Math.ceil(historyList.length / HISTORY_PAGE_SIZE) || 1;
       if (currentHistoryPage > maxPagesNow) currentHistoryPage = maxPagesNow;
       renderHistory();
