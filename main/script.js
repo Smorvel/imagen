@@ -4,9 +4,10 @@ let lastImageUrl = "";
 let historyList = [];
 
 function getRandomSeed() {
-  const min = -999999999999999;
-  const max = 999999999999999;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  const length = Math.floor(Math.random() * 15) + 1; // длина от 1 до 15 цифр
+  const sign = Math.random() < 0.5 ? -1 : 1;
+  const digits = Array.from({ length }, () => Math.floor(Math.random() * 10)).join('');
+  return sign * parseInt(digits, 10);
 }
 
 async function translateIfCyrillic(text) {
@@ -21,7 +22,7 @@ async function translateIfCyrillic(text) {
 
 function buildImageUrl(prompt, seed, enhance = false) {
   const encoded = encodeURIComponent(prompt);
-  let url = `https://image.pollinations.ai/prompt/${encoded}?seed=${seed}&nologo=true`;
+  let url = `https://image.pollinations.ai/prompt/${encoded}?seed=${seed}&nologo=true&private=true`;
   if (enhance) url += "&enhance=true";
   return url;
 }
