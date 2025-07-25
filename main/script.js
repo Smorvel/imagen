@@ -6,6 +6,98 @@ let currentHistoryPage = 1;
 const HISTORY_PAGE_SIZE = 21;
 const MAX_HISTORY = 250;
 
+// --- IndexedDB helpers ---
+const DB_NAME = "imgGenDB";
+const STORE_NAME = "history";
+const DB_VERSION = 1;
+let db = null;
+
+// Открытие/создание базы
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (db) return resolve(db);
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = function (event) {
+      db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "id" });
+      }
+    };
+    request.onsuccess = function (event) {
+      db = event.target.result;
+      resolve(db);
+    };
+    request.onerror = function (event) {
+      reject(event.target.error);
+    };
+  });
+}
+
+// Сохранить всё в IndexedDB (перезаписывает всю историю)
+async function saveHistoryToDB(historyArr) {
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  const store = tx.objectStore(STORE_NAME);
+  await clearHistoryDB();
+  for (const item of historyArr) {
+    store.put(item);
+  }
+  return tx.complete || tx.done || tx;
+}
+
+// Получить всю историю из IndexedDB
+async function loadHistoryFromDB() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const items = [];
+    const cursorReq = store.openCursor(null, "prev");
+    cursorReq.onsuccess = function (e) {
+      const cursor = e.target.result;
+      if (cursor) {
+        items.push(cursor.value);
+        cursor.continue();
+      } else {
+        resolve(items);
+      }
+    };
+    cursorReq.onerror = function (e) {
+      reject(e.target.error);
+    };
+  });
+}
+
+// Добавить элемент в IndexedDB (и обрезать лишнее)
+async function addToHistoryDB(item) {
+  let arr = await loadHistoryFromDB();
+  arr.unshift(item);
+  if (arr.length > MAX_HISTORY) arr = arr.slice(0, MAX_HISTORY);
+  await saveHistoryToDB(arr);
+  historyList = arr;
+  renderHistory();
+}
+
+// Удалить элемент из IndexedDB
+async function removeFromHistoryDB(id) {
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  const store = tx.objectStore(STORE_NAME);
+  store.delete(id);
+  await tx.complete || tx.done || tx;
+  historyList = await loadHistoryFromDB();
+  renderHistory();
+}
+
+// Очистить всё хранилище IndexedDB
+async function clearHistoryDB() {
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  const store = tx.objectStore(STORE_NAME);
+  store.clear();
+  return tx.complete || tx.done || tx;
+}
+
 // --- base64 helpers ---
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
@@ -14,21 +106,6 @@ function blobToBase64(blob) {
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
-}
-
-// --- Storage ---
-function saveHistoryToStorage() {
-  localStorage.setItem("imgHistory", JSON.stringify(historyList));
-}
-
-function loadHistoryFromStorage() {
-  const saved = localStorage.getItem("imgHistory");
-  if (!saved) return;
-  try {
-    historyList = JSON.parse(saved);
-  } catch {
-    historyList = [];
-  }
 }
 
 // --- Main logic ---
@@ -58,16 +135,8 @@ function buildImageUrl(prompt, seed, enhance = false) {
 }
 
 function createOverlayBtns(enhanced = false, disabledEnhance = false) {
-  const enhanceSVG = `<svg height="800px" width="800px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 431.661 431.661" xml:space="preserve" fill="#ffffff" stroke="#ffffff">
-
-<g id="SVGRepo_bgCarrier" stroke-width="0"/>
-
-<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
-
-<g id="SVGRepo_iconCarrier"> <g> <path style="fill:#ffffff;" d="M180.355,213.668l40.079,40.085L42.526,431.661L2.446,391.576L180.355,213.668z M228.877,245.316 l-40.079-40.085l68.905-68.911l40.091,40.079L228.877,245.316z"/> <polygon style="fill:#ffffff;" points="380.066,218.525 391.999,218.519 391.999,181.309 429.215,181.309 429.215,169.376 391.999,169.376 391.999,132.166 380.066,132.166 380.066,169.376 342.862,169.376 342.862,181.309 380.066,181.309 "/> <polygon style="fill:#ffffff;" points="393.282,260.424 393.282,248.49 356.073,248.49 356.073,211.281 344.145,211.281 344.145,248.49 306.93,248.49 306.93,260.424 344.145,260.424 344.145,297.633 356.073,297.633 356.073,260.424 "/> <polygon style="fill:#ffffff;" points="302.956,37.209 265.741,37.209 265.741,0 253.807,0 253.807,37.209 216.603,37.209 216.603,49.143 253.807,49.143 253.807,86.353 265.741,86.353 265.741,49.143 302.956,49.143 "/> <polygon style="fill:#ffffff;" points="223.853,73.148 186.638,73.148 186.638,35.932 174.71,35.932 174.71,73.148 137.495,73.148 137.495,85.076 174.71,85.076 174.71,122.291 186.638,122.291 186.638,85.076 223.853,85.076 "/> </g> </g>
-
-</svg>`;
-  const downloadSVG = `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="none"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill="#ffffff" fill-rule="evenodd" d="M11 2a1 1 0 10-2 0v7.74L5.173 6.26a1 1 0 10-1.346 1.48l5.5 5a1 1 0 001.346 0l5.5-5a1 1 0 00-1.346-1.48L11 9.74V2zm-7.895 9.204A1 1 0 001.5 12v3.867a2.018 2.018 0 002.227 2.002c1.424-.147 3.96-.369 6.273-.369 2.386 0 5.248.236 6.795.383a2.013 2.013 0 002.205-2V12a1 1 0 10-2 0v3.884l-13.895-4.68zm0 0L2.5 11l.605.204zm0 0l13.892 4.683a.019.019 0 01-.007.005h-.006c-1.558-.148-4.499-.392-6.984-.392-2.416 0-5.034.23-6.478.38h-.009a.026.026 0 01-.013-.011V12a.998.998 0 00-.394-.796z"></path> </g></svg>`;
+  const enhanceSVG = `<svg height="800px" width="800px" ...></svg>`;
+  const downloadSVG = `<svg viewBox="0 0 20 20" ...></svg>`;
 
   const enhanceBtn = document.createElement("button");
   enhanceBtn.className = "overlay-btn";
@@ -139,7 +208,7 @@ async function showImage(url, seed, prompt, enhanced) {
       lastSeed = seed;
 
       const item = { url, seed, prompt, enhanced, id: Date.now(), data: base64 };
-      addToHistory(item);
+      addToHistoryDB(item);
     };
 
     img.onerror = () => {
@@ -152,14 +221,6 @@ async function showImage(url, seed, prompt, enhanced) {
     const oldBtns = document.querySelector(".result-overlay-btns");
     if (oldBtns) oldBtns.remove();
   }
-}
-
-function addToHistory(item) {
-  historyList.unshift(item);
-  if (historyList.length > MAX_HISTORY)
-    historyList = historyList.slice(0, MAX_HISTORY);
-  saveHistoryToStorage();
-  renderHistory();
 }
 
 function renderHistoryPagination(totalPages) {
@@ -197,14 +258,13 @@ function renderHistory() {
     div.innerHTML = `
       <button title="Удалить">×</button>
       <div class="history-img-wrap" style="width:100%;text-align:center;">
-        ${item.data ? `<img src="data:image/png;base64,${item.data}" draggable="true" alt="Сгенерированное изображение" style="max-width:100%;border-radius:5px;" title="Перетащите или откройте в новой вкладке">` : '<span style="color:#e53935;">Ошибка загрузки</span>'}
+        ${item.data ? `<img src="data:image/png;base64,${item.data}" draggable="true" alt="Сгенерированное изображение" style="max-width:100%;border-radius:5px;" title="Пе�[...]
       </div>
       <p><strong>Prompt:</strong> ${item.prompt}</p>
       <p><strong>Сид:</strong> ${item.seed}${item.enhanced ? " (улучшено)" : ""}</p>
     `;
-    div.querySelector("button").onclick = () => {
-      historyList = historyList.filter(x => x.id != item.id);
-      saveHistoryToStorage();
+    div.querySelector("button").onclick = async () => {
+      await removeFromHistoryDB(item.id);
       const maxPagesNow = Math.ceil(historyList.length / HISTORY_PAGE_SIZE) || 1;
       if (currentHistoryPage > maxPagesNow) currentHistoryPage = maxPagesNow;
       renderHistory();
@@ -227,7 +287,7 @@ document.getElementById("generateBtn").addEventListener("click", async () => {
   showImage(url, seed, promptTranslated, false);
 });
 
-window.addEventListener("DOMContentLoaded", () => {
-  loadHistoryFromStorage();
+window.addEventListener("DOMContentLoaded", async () => {
+  historyList = await loadHistoryFromDB();
   renderHistory();
 });
