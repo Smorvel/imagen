@@ -35,6 +35,12 @@ button:disabled {
 #result img {
   max-width: 50%; border-radius: 8px;
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+  border: 3px solid #5f9933;
+  transition: transform 0.2s;
+}
+
+#result img:hover {
+    transform: scale(1.04) rotate(-2deg);
 }
 
 .download-overlay {
