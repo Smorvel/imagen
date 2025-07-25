@@ -43,11 +43,44 @@ button:disabled {
     transform: scale(1.04) rotate(-2deg);
 }
 
-.download-overlay {
-  position: absolute; top: 10px; right: 10px;
-  background: rgba(0,0,0,0.6); color: #fff; padding: 6px 10px;
-  border-radius: 4px; font-size: 12px; cursor: pointer;
-  opacity: 0.8; text-decoration: none;
+/* Overlay buttons block */
+.result-overlay-btns {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 12px;
+  z-index: 2;
+}
+
+.overlay-btn {
+  background: rgba(20, 20, 20, 0.8);
+  border: none;
+  border-radius: 50%;
+  padding: 8px;
+  cursor: pointer;
+  opacity: 0.85;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, opacity 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+.overlay-btn:hover {
+    background: #242424;
+}
+
+.overlay-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.overlay-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: #fff;
+  pointer-events: none;
 }
 
 #history {
@@ -94,4 +127,35 @@ textarea#prompt {
   margin-bottom: 12px;
   font-size: 16px;
   line-height: 1.4;
+}
+
+/* Pagination styles */
+.history-pagination {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin: 18px 0 0 0;
+}
+.history-pagination button {
+  background: #232323;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: background 0.2s;
+}
+.history-pagination button.active {
+  background: #008ba3;
+  color: #fff;
+  opacity: 1;
+  font-weight: bold;
+}
+.history-pagination button:disabled {
+  background: #444;
+  cursor: not-allowed;
+  opacity: 0.5;
 }
