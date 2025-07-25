@@ -4,7 +4,9 @@ let lastImageUrl = "";
 let historyList = [];
 
 function getRandomSeed() {
-  return Math.floor(Math.random() * 1e9);
+  const min = -999999999999999;
+  const max = 999999999999999;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 async function translateIfCyrillic(text) {
