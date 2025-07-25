@@ -255,16 +255,23 @@ function renderHistory() {
     const div = document.createElement("div");
     div.className = "history-item";
     div.dataset.id = item.id;
+
+    // Корректная картинка, шаблон и обработчик
     div.innerHTML = `
       <button title="Удалить">×</button>
       <div class="history-img-wrap" style="width:100%;text-align:center;">
-        ${item.data ? `<img src="data:image/png;base64,${item.data}" draggable="true" alt="Сгенерированное изображение" style="max-width:100%;border-radius:5px;" title="Пе�[...]
+        ${item.data 
+          ? `<img src="data:image/png;base64,${item.data}" draggable="true" alt="Сгенерированное изображение" style="max-width:100%;border-radius:5px;" title="Перетащите для копирования" />`
+          : ""
+        }
       </div>
       <p><strong>Prompt:</strong> ${item.prompt}</p>
       <p><strong>Сид:</strong> ${item.seed}${item.enhanced ? " (улучшено)" : ""}</p>
     `;
+    // обработчик удаления
     div.querySelector("button").onclick = async () => {
       await removeFromHistoryDB(item.id);
+      historyList = await loadHistoryFromDB();
       const maxPagesNow = Math.ceil(historyList.length / HISTORY_PAGE_SIZE) || 1;
       if (currentHistoryPage > maxPagesNow) currentHistoryPage = maxPagesNow;
       renderHistory();
