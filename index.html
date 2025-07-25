@@ -2,11 +2,11 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="main/styles.css" />
 </head>
 <body>
+     <textarea id="prompt" placeholder="Опиши, что сгенерировать..."></textarea>
   <div class="input-group">
-    <input type="text" id="prompt" placeholder="Что нарисовать?" />
     <input type="text" id="seed" placeholder="Сид (по умолчанию случайный)" />
     <button id="generateBtn">Сгенерировать</button>
     <button id="enhanceBtn" disabled>Улучшить</button>
@@ -17,6 +17,6 @@
   <h2>История</h2>
   <div id="history"></div>
 
-  <script src="script.js"></script>
+  <script src="main/script.js"></script>
 </body>
 </html>
