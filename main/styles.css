@@ -1,0 +1,91 @@
+body {
+  background: #121212;
+  color: #e0e0e0;
+  font-family: "Segoe UI", sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 50px 20px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 30px; margin-bottom: 20px; color: #fff;
+}
+
+.input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+
+input {
+  padding: 10px; font-size: 14px; border-radius: 6px;
+  border: 1px solid #333; background: #1e1e1e; color: #e0e0e0;
+}
+
+button {
+  padding: 10px 14px; font-size: 14px; border: none; border-radius: 6px;
+  background: #008ba3; color: white; cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:disabled {
+  opacity: 0.5; cursor: not-allowed;
+}
+
+#result { position: relative; margin-top: 20px; text-align: center; }
+
+#result img {
+  max-width: 50%; border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+}
+
+.download-overlay {
+  position: absolute; top: 10px; right: 10px;
+  background: rgba(0,0,0,0.6); color: #fff; padding: 6px 10px;
+  border-radius: 4px; font-size: 12px; cursor: pointer;
+  opacity: 0.8; text-decoration: none;
+}
+
+#history {
+  display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px;
+  width: 100%; max-width: 800px;
+}
+
+.history-item {
+  background: #1a1a1a; padding: 3px; border-radius: 10px;
+  color: #ccc; font-size: 12px; box-shadow: 0 0 10px rgba(0,255,255,0.1);
+  position: relative; width: calc(33% - 20px);
+}
+
+.history-item img {
+  max-width: 100%; border-radius: 5px;
+}
+
+.history-item button {
+  position: absolute; top: 5px; right: 5px;
+  background: #e53935; padding: 4px 6px; font-size: 10px;
+}
+
+body {
+  background-color: #121212;
+  color: #eee;
+  font-family: sans-serif;
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+}
+
+textarea#prompt {
+  width: 100%;
+  height: 60px;
+  resize: vertical;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  padding: 10px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background-color: #1e1e1e;
+  color: #fff;
+  margin-bottom: 12px;
+  font-size: 16px;
+  line-height: 1.4;
+}
