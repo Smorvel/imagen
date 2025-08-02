@@ -1,22 +1,51 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <link rel="icon" href="main/favicon.ico" type="image/x-icon">.
   <link rel="stylesheet" href="main/styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Image Generator</title>
 </head>
 <body>
-  <textarea id="prompt" placeholder="Опиши, что сгенерировать..."></textarea>
-  <div class="input-group">
-    <input type="text" id="seed" placeholder="Сид (по умолчанию случайный)" />
-    <button id="generateBtn">Сгенерировать</button>
+  <div class="container">
+    <header class="header">
+      <h1>AI Image Generator</h1>
+      <p>Создавайте потрясающие изображения с помощью искусственного интеллекта</p>
+    </header>
+
+    <div class="main-content">
+      <div class="control-panel">
+        <div class="form-group">
+          <label for="prompt">Описание изображения</label>
+          <textarea id="prompt" placeholder="Опишите, что вы хотите сгенерировать..."></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="seed">Сид (необязательно)</label>
+          <input type="text" id="seed" placeholder="Случайный сид">
+        </div>
+        
+        <button class="generate-btn" id="generateBtn">
+          <span>Сгенерировать</span>
+        </button>
+      </div>
+
+      <div class="result-area" id="resultArea">
+        <div class="empty-state">
+          <div class="icon">🎨</div>
+          <p>Введите описание изображения и нажмите "Сгенерировать"</p>
+        </div>
+      </div>
+    </div>
+
+    <section class="history-section">
+      <h2 class="history-title">История генераций</h2>
+      <div class="history-grid" id="historyGrid"></div>
+      <div class="pagination" id="pagination"></div>
+    </section>
   </div>
 
-  <div id="result"></div>
-
-  <h2>История</h2>
-  <div id="history"></div>
-
-  <script src="main/script.js"></script>
+<script src="main/script.js"></script>
 </body>
 </html>
