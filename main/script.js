@@ -132,6 +132,7 @@
       formData.append('action', 'upload');
       formData.append('source', file);
       formData.append('format', 'json');
+      formData.append('expiration', '3600');
 
       try {
         const response = await fetch('https://corsproxy.io/?https://freeimage.host/api/1/upload', {
