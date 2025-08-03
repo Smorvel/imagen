@@ -3,6 +3,11 @@
     const HISTORY_PAGE_SIZE = 12;
     const MAX_HISTORY = 100;
     let isGenerating = false;
+    let uploadedImageUrl = null;
+
+    // API credentials
+    const FREEIMAGE_API_KEY = '6d207e02198a847aa98d0a2a901485a5';
+    const POLLINATIONS_TOKEN = 'Nw4HL4pP4pKfKD_0';
 
     // IndexedDB setup
     const DB_NAME = "aiImageGenDB";
@@ -121,10 +126,49 @@
       }
     }
 
-    function buildImageUrl(prompt, seed, enhance = false) {
+    async function uploadImageToFreeImage(file) {
+      const formData = new FormData();
+      formData.append('key', FREEIMAGE_API_KEY);
+      formData.append('action', 'upload');
+      formData.append('source', file);
+      formData.append('format', 'json');
+
+      try {
+        const response = await fetch('https://freeimage.host/api/1/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.success && data.image && data.image.url) {
+          return data.image.url;
+        } else {
+          throw new Error(data.error?.message || 'Ошибка загрузки изображения');
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        throw error;
+      }
+    }
+
+    function buildImageUrl(prompt, seed, enhance = false, imageUrl = null) {
       const encoded = encodeURIComponent(prompt);
-      let url = `https://image.pollinations.ai/prompt/${encoded}?seed=${seed}&nologo=true&private=true`;
-      if (enhance) url += "&enhance=true";
+      let url;
+      
+      if (imageUrl) {
+        // Using kontext model with uploaded image
+        url = `https://image.pollinations.ai/prompt/${encoded}?private=true&nologo=true&enhance=${enhance}&model=kontext&transparent=true&token=${POLLINATIONS_TOKEN}&seed=${seed}&image=${encodeURIComponent(imageUrl)}`;
+      } else {
+        // Regular generation
+        url = `https://image.pollinations.ai/prompt/${encoded}?seed=${seed}&nologo=true&private=true`;
+        if (enhance) url += "&enhance=true";
+      }
+      
       return url;
     }
 
@@ -148,7 +192,7 @@
       `;
     }
 
-    async function showImage(url, seed, prompt, enhanced = false) {
+    async function showImage(url, seed, prompt, enhanced = false, sourceImageUrl = null) {
       try {
         const response = await fetch(url);
         if (!response.ok) throw new Error("Не удалось загрузить изображение");
@@ -174,7 +218,7 @@
           </div>
           <img src="${imgSrc}" alt="Generated image" class="result-image">
           <div class="result-info">
-            <strong>Сид:</strong> ${seed}${enhanced ? ' (улучшено)' : ''}<br>
+            <strong>Сид:</strong> ${seed}${enhanced ? ' (улучшено)' : ''}${sourceImageUrl ? ' (с изображением)' : ''}<br>
             <strong>Промт:</strong> ${prompt}
           </div>
         `;
@@ -191,9 +235,9 @@
 
         if (!enhanced) {
           document.getElementById('enhanceBtn').onclick = async () => {
-            const enhancedUrl = buildImageUrl(prompt, seed, true);
+            const enhancedUrl = buildImageUrl(prompt, seed, true, sourceImageUrl);
             showLoader();
-            await showImage(enhancedUrl, seed, prompt, true);
+            await showImage(enhancedUrl, seed, prompt, true, sourceImageUrl);
           };
         }
 
@@ -204,6 +248,7 @@
           seed,
           prompt,
           enhanced,
+          sourceImageUrl,
           data: base64,
           timestamp: new Date().toISOString()
         };
@@ -235,7 +280,7 @@
         </div>
         <img src="${imgSrc}" alt="Generated image" class="result-image">
         <div class="result-info">
-          <strong>Сид:</strong> ${item.seed}${item.enhanced ? ' (улучшено)' : ''}<br>
+          <strong>Сид:</strong> ${item.seed}${item.enhanced ? ' (улучшено)' : ''}${item.sourceImageUrl ? ' (с изображением)' : ''}<br>
           <strong>Промт:</strong> ${item.prompt}
         </div>
       `;
@@ -256,9 +301,9 @@
 
       if (!item.enhanced) {
         document.getElementById('enhanceBtn').onclick = async () => {
-          const enhancedUrl = buildImageUrl(item.prompt, item.seed, true);
+          const enhancedUrl = buildImageUrl(item.prompt, item.seed, true, item.sourceImageUrl);
           showLoader();
-          await showImage(enhancedUrl, item.seed, item.prompt, true);
+          await showImage(enhancedUrl, item.seed, item.prompt, true, item.sourceImageUrl);
         };
       }
 
@@ -294,7 +339,7 @@
           <img src="data:image/png;base64,${item.data}" alt="Generated image">
           <div class="history-item-info">
             <div class="history-item-prompt">${item.prompt}</div>
-            <div>Сид: ${item.seed}${item.enhanced ? ' (улучшено)' : ''}</div>
+            <div>Сид: ${item.seed}${item.enhanced ? ' (улучшено)' : ''}${item.sourceImageUrl ? ' (с изображением)' : ''}</div>
           </div>
         </div>
       `).join('');
@@ -315,6 +360,29 @@
       }
     }
 
+    function showImagePreview(file) {
+      const preview = document.getElementById('imagePreview');
+      const previewImg = document.getElementById('previewImg');
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        previewImg.src = e.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeImagePreview() {
+      const preview = document.getElementById('imagePreview');
+      const previewImg = document.getElementById('previewImg');
+      const fileInput = document.getElementById('imageUpload');
+      
+      preview.style.display = 'none';
+      previewImg.src = '';
+      fileInput.value = '';
+      uploadedImageUrl = null;
+    }
+
     // Main generation function
     async function generateImage() {
       if (isGenerating) return;
@@ -333,13 +401,27 @@
       try {
         const seed = document.getElementById('seed').value.trim() || getRandomSeed();
         const translatedPrompt = await translateIfCyrillic(promptText);
-        const imageUrl = buildImageUrl(translatedPrompt, seed);
+        
+        // Check if there's an uploaded image
+        const fileInput = document.getElementById('imageUpload');
+        let sourceImageUrl = uploadedImageUrl;
+        
+        if (fileInput.files.length > 0 && !uploadedImageUrl) {
+          // Upload image first
+          generateBtn.innerHTML = '<span>Загружаем изображение...</span>';
+          sourceImageUrl = await uploadImageToFreeImage(fileInput.files[0]);
+          uploadedImageUrl = sourceImageUrl;
+        }
+        
+        generateBtn.innerHTML = '<span>Генерируем...</span>';
+        const imageUrl = buildImageUrl(translatedPrompt, seed, false, sourceImageUrl);
         
         showLoader();
-        await showImage(imageUrl, seed, translatedPrompt);
+        await showImage(imageUrl, seed, translatedPrompt, false, sourceImageUrl);
         
       } catch (error) {
-        showError("Произошла ошибка при генерации");
+        console.error('Generation error:', error);
+        showError(error.message || "Произошла ошибка при генерации");
       } finally {
         isGenerating = false;
         generateBtn.disabled = false;
@@ -355,6 +437,30 @@
         generateImage();
       }
     });
+
+    document.getElementById('imageUpload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          alert('Пожалуйста, выберите файл изображения');
+          e.target.value = '';
+          return;
+        }
+        
+        // Check file size (limit to 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          alert('Размер файла не должен превышать 10MB');
+          e.target.value = '';
+          return;
+        }
+        
+        showImagePreview(file);
+        uploadedImageUrl = null; // Reset uploaded URL when new file is selected
+      }
+    });
+
+    document.getElementById('removeImage').addEventListener('click', removeImagePreview);
 
     // Initialize
     window.addEventListener('DOMContentLoaded', async () => {
