@@ -126,36 +126,34 @@
       }
     }
 
-    async function uploadImageToFreeImage(file) {
-      const formData = new FormData();
-      formData.append('key', FREEIMAGE_API_KEY);
-      formData.append('action', 'upload');
-      formData.append('source', file);
-      formData.append('format', 'json');
-      formData.append('expiration', '300');
+   async function uploadImageToFreeImage(file) {
+  const formData = new FormData();
+  formData.append('image', await toBase64(file));
+  formData.append('key', 'd9daeb246323e313f85f0251d51083c5');
+  formData.append('expiration', '300'); // удаление в секундах
 
-      try {
-        const response = await fetch('https://corsproxy.io/?https://freeimage.host/api/1/upload', {
-          method: 'POST',
-          body: formData
-        });
+  try {
+    const response = await fetch('https://api.imgbb.com/1/upload', {
+      method: 'POST',
+      body: formData
+    });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        
-        if (data.success && data.image && data.image.url) {
-          return data.image.url;
-        } else {
-          throw new Error(data.error?.message || 'Ошибка загрузки изображения');
-        }
-      } catch (error) {
-        console.error('Upload error:', error);
-        throw error;
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const data = await response.json();
+
+    if (data.success && data.data && data.data.url) {
+      return data.data.url;
+    } else {
+      throw new Error(data.error?.message || 'Ошибка загрузки изображения');
+    }
+  } catch (error) {
+    console.error('Upload error:', error);
+    throw error;
+  }
+}
 
     function buildImageUrl(prompt, seed, enhance = false, imageUrl = null) {
       const encoded = encodeURIComponent(prompt);
