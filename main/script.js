@@ -134,7 +134,7 @@
       formData.append('format', 'json');
 
       try {
-        const response = await fetch('https://freeimage.host/api/1/upload', {
+        const response = await fetch('https://corsproxy.io/?https://freeimage.host/api/1/upload', {
           method: 'POST',
           body: formData
         });
