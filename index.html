@@ -21,6 +21,15 @@
           <label for="seed">Сид (необязательно)</label>
           <input type="text" id="seed" placeholder="Случайный сид">
         </div>
+
+        <div class="form-group">
+          <label for="imageUpload">Загрузить изображение (необязательно)</label>
+          <input type="file" id="imageUpload" accept="image/*">
+          <div id="imagePreview" class="image-preview" style="display: none;">
+            <img id="previewImg" src="" alt="Preview">
+            <button type="button" id="removeImage" class="remove-image-btn">×</button>
+          </div>
+        </div>
         
         <button class="generate-btn" id="generateBtn">
           <span>Сгенерировать</span>
@@ -45,5 +54,6 @@
 <script src="main/script.js"></script>
 </body>
 </html>
+
 
 
