@@ -15,21 +15,90 @@
         <div class="form-group">
           <label for="prompt">Описание изображения</label>
           <textarea id="prompt" placeholder="Опишите, что вы хотите сгенерировать..."></textarea>
+          <div class="prompt-controls">
+            <button id="enhancePromptBtn" class="enhance-prompt-btn">
+              Дополнить <span class="enhance-count">0</span>
+            </button>
+            <button id="referenceBtn" class="reference-btn">
+              Референс
+            </button>
+            <button id="improvePromptBtn" class="improve-prompt-btn" disabled title="Улучшить промт">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                <g fill="#9c9c9c">
+                  <path d="M3.84 3.84a2.88 2.88 0 0 0 0 4.08l1.6 1.59a.76.76 0 0 1 .03-.04l4-4a.77.77 0 0 1 .04-.04L7.92 3.84a2.88 2.88 0 0 0-4.08 0ZM10.57 6.49a.75.75 0 0 1-.04.04l-4 4a.75.75 0 0 1-.04.04l9.59 9.59a2.88 2.88 0 0 0 4.08-4.08l-9.6-9.59ZM16.1 2.3a.48.48 0 0 1 .9 0l.43 1.1c.05.13.15.23.27.28l1.1.43c.4.16.4.74 0 .9l-1.1.43a.48.48 0 0 0-.27.28L17 6.82a.48.48 0 0 1-.9 0l-.43-1.1a.48.48 0 0 0-.27-.28l-1.1-.43a.49.49 0 0 1 0-.9l1.1-.43a.48.48 0 0 0 .27-.28l.43-1.1ZM19.97 9.13a.48.48 0 0 1 .9 0l.15.4c.05.12.15.22.28.27l.4.16c.4.16.4.74 0 .9l-.4.16a.48.48 0 0 0-.28.27l-.15.4a.48.48 0 0 1-.9 0l-.16-.4a.48.48 0 0 0-.27-.27l-.4-.16a.49.49 0 0 1 0-.9l.4-.16a.48.48 0 0 0 .27-.27l.16-.4ZM5.13 15.3a.48.48 0 0 1 .9 0l.16.4c.05.13.15.23.27.28l.4.16c.4.16.4.74 0 .9l-.4.16a.48.48 0 0 0-.27.27l-.16.4a.48.48 0 0 1-.9 0l-.15-.4a.48.48 0 0 0-.28-.27l-.4-.16a.49.49 0 0 1 0-.9l.4-.16a.48.48 0 0 0 .28-.27l.15-.4Z"/>
+                </g>
+              </svg>
+            </button>
+            <div id="enhanceMenu" class="enhance-menu">
+              <div class="enhance-menu-content">
+                <div class="enhance-option" data-value="high detailed">
+                  <div class="enhance-option-preview">
+                    <img src="main\img\hd.png" alt="Высокая детализация">
+                  </div>
+                  <div class="enhance-option-text">Высокая детализация</div>
+                </div>
+                <div class="enhance-option" data-value="anime style">
+                  <div class="enhance-option-preview">
+                    <img src="main\img\anime.png" alt="Аниме">
+                  </div>
+                  <div class="enhance-option-text">Аниме</div>
+                </div>
+                <div class="enhance-option" data-value="watercolor style">
+                  <div class="enhance-option-preview">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIzMCIgZmlsbD0iIzQxYjg4MyIvPgogIDxwYXRoIGQ9Ik0zNSA1MEw0NSA2MEw2NSA0MCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI0Ii8+Cjwvc3ZnPg==" alt="Раскраска">
+                  </div>
+                  <div class="enhance-option-text">Раскраска</div>
+                </div>
+                <div class="enhance-option" data-value="photorealistic">
+                  <div class="enhance-option-preview">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIzMCIgZmlsbD0iIzc2NGJhMiIvPgogIDxwYXRoIGQ9Ik0zNSA1MEw0NSA2MEw2NSA0MCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI0Ii8+Cjwvc3ZnPg==" alt="Фотореалистичность">
+                  </div>
+                  <div class="enhance-option-text">Фотореалистичность</div>
+                </div>
+                <div class="enhance-option" data-value="oil painting">
+                  <div class="enhance-option-preview">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIzMCIgZmlsbD0iI2U3NGMzYyIvPgogIDxwYXRoIGQ9Ik0zNSA1MEw0NSA2MEw2NSA0MCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI0Ii8+Cjwvc3ZnPg==" alt="Масляная живопись">
+                  </div>
+                  <div class="enhance-option-text">Масляная живопись</div>
+                </div>
+                <div class="enhance-option" data-value="cinematic lighting">
+                  <div class="enhance-option-preview">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIzMCIgZmlsbD0iI2YxYzQwZiIvPgogIDxwYXRoIGQ9Ik0zNSA1MEw0NSA2MEw2NSA0MCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI0Ii8+Cjwvc3ZnPg==" alt="Кинематографическое освещение">
+                  </div>
+                  <div class="enhance-option-text">Кинематографическое освещение</div>
+                </div>
+              </div>
+              <button id="resetEnhanceBtn" class="reset-enhance-btn">Сбросить</button>
+            </div>
+          </div>
         </div>
         
         <div class="form-group">
           <label for="seed">Сид</label>
-          <input type="text" id="seed" placeholder="Случайный сид">
-        </div>
-
-        <div class="form-group">
-          <label for="imageUpload" class="img-upload-btn">Референс</label>
-          <input type="file" id="imageUpload" accept="image/*" style="display: none;">
-          <div id="imagePreview" class="image-preview" style="display: none;">
-            <img id="previewImg" src="" alt="Preview">
-            <button type="button" id="removeImage" class="remove-image-btn">×</button>
+          <div class="seed-controls">
+            <input type="text" id="seed" placeholder="Случайный сид">
+            <button id="diceBtn" class="dice-btn" title="Сгенерировать случайный сид">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm2 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM12 13a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+              </svg>
+            </button>
           </div>
         </div>
+
+        <div id="imagePreview" class="image-preview" style="display: none;">
+          <div class="image-preview-container">
+            <img id="previewImg" src="" alt="Preview">
+            <div class="image-preview-overlay">
+              <button type="button" id="removeImage" class="remove-image-btn" title="Удалить изображение">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="image-preview-info">Изображение будет использовано как референс</div>
+        </div>
+        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
         
         <button class="generate-btn" id="generateBtn">
           <span>Сгенерировать</span>
