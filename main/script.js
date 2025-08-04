@@ -113,7 +113,10 @@ let historyList = [];
     }
 
     async function translateIfCyrillic(text) {
-      if (!/[А-Яа-яЁё]/.test(text)) return text;
+      if (!/[А-Яа-яЁё]/.test(text)) {
+        // Если текст не содержит кириллицу, добавляем дополнения и возвращаем
+        return addEnhancementsToPrompt(text);
+      }
       
       // Сначала пробуем использовать Pollinations API
       try {
@@ -129,7 +132,8 @@ let historyList = [];
             
             const translatedText = await response.text();
             if (translatedText && translatedText.trim()) {
-              resolve(translatedText.trim());
+              // Добавляем дополнения к переведенному тексту
+              resolve(addEnhancementsToPrompt(translatedText.trim()));
             } else {
               throw new Error('Empty response from Pollinations API');
             }
@@ -157,12 +161,30 @@ let historyList = [];
         const res = await fetch(
           `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ru&tl=en&dt=t&q=${encodeURIComponent(text)}`
         );
-        if (!res.ok) return text;
+        if (!res.ok) return addEnhancementsToPrompt(text);
         const data = await res.json();
-        return data[0].map(part => part[0]).join(" ").trim();
+        const translatedText = data[0].map(part => part[0]).join(" ").trim();
+        // Добавляем дополнения к переведенному тексту
+        return addEnhancementsToPrompt(translatedText);
       } catch (e) {
-        return text;
+        // В случае ошибки добавляем дополнения к исходному тексту
+        return addEnhancementsToPrompt(text);
       }
+    }
+    
+    // Функция для добавления дополнений к промту
+    function addEnhancementsToPrompt(text) {
+      if (selectedEnhancements.length === 0) return text;
+      
+      // Сортируем опции по приоритету
+      const sortedEnhancements = [...selectedEnhancements].sort((a, b) => {
+        const priorityA = enhancementPriorities[a] || 999;
+        const priorityB = enhancementPriorities[b] || 999;
+        return priorityA - priorityB;
+      });
+      
+      const enhancementsText = sortedEnhancements.join(', ');
+      return `${text}, ${enhancementsText}`;
     }
 
    async function uploadImageToFreeImage(file) {
@@ -261,8 +283,8 @@ function toBase64(file) {
               </svg>
             </button>
             <button class="action-btn" id="enhanceBtn" title="Улучшить" ${enhanced ? 'disabled' : ''}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="20" height="20" viewBox="0 0 512 512">
+                <path d="M512 144.515C512 83.329 397.403 33.71 256 33.71 114.62 33.71 0 83.33 0 144.515c0 35.481 38.657 66.98 98.574 87.269-8.485 86.498-17.61 183.189-18.322 185.368 0 6.886 30.552 61.138 175.748 61.138 145.195 0 175.77-54.253 175.77-61.138-.663-2.002-8.271-80.289-16.045-161.406-28.276 4.646-58.898 7.229-90.943 7.229-34.556 0-67.478-3.011-97.532-8.39 9.434.461 19.008.746 28.75.746 141.403 0 256-49.62 256-110.816zm-389.725-3.533c0-25.822 59.87-46.763 133.725-46.763 73.854 0 133.748 20.94 133.748 46.763 0 25.812-59.894 46.764-133.748 46.764-73.855 0-133.725-20.952-133.725-46.764z" style="fill:#fff"/>
               </svg>
             </button>
           </div>
@@ -330,8 +352,8 @@ function toBase64(file) {
             </svg>
           </button>
           <button class="action-btn" id="enhanceBtn" title="Улучшить" ${item.enhanced ? 'disabled' : ''}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="20" height="20" viewBox="0 0 512 512">
+              <path d="M512 144.515C512 83.329 397.403 33.71 256 33.71 114.62 33.71 0 83.33 0 144.515c0 35.481 38.657 66.98 98.574 87.269-8.485 86.498-17.61 183.189-18.322 185.368 0 6.886 30.552 61.138 175.748 61.138 145.195 0 175.77-54.253 175.77-61.138-.663-2.002-8.271-80.289-16.045-161.406-28.276 4.646-58.898 7.229-90.943 7.229-34.556 0-67.478-3.011-97.532-8.39 9.434.461 19.008.746 28.75.746 141.403 0 256-49.62 256-110.816zm-389.725-3.533c0-25.822 59.87-46.763 133.725-46.763 73.854 0 133.748 20.94 133.748 46.763 0 25.812-59.894 46.764-133.748 46.764-73.855 0-133.725-20.952-133.725-46.764z" style="fill:#fff"/>
             </svg>
           </button>
         </div>
@@ -503,18 +525,8 @@ function toBase64(file) {
         return;
       }
       
-      // Добавляем выбранные опции к промту с учетом приоритетов
-      if (selectedEnhancements.length > 0) {
-        // Сортируем опции по приоритету
-        const sortedEnhancements = [...selectedEnhancements].sort((a, b) => {
-          const priorityA = enhancementPriorities[a] || 999;
-          const priorityB = enhancementPriorities[b] || 999;
-          return priorityA - priorityB;
-        });
-        
-        const enhancementsText = sortedEnhancements.join(', ');
-        promptText = `${promptText}, ${enhancementsText}`;
-      }
+      // Сохраняем выбранные опции, но не добавляем их к промту сразу
+      // Они будут добавлены после перевода
 
       isGenerating = true;
       const generateBtn = document.getElementById('generateBtn');
@@ -556,14 +568,8 @@ function toBase64(file) {
     let selectedEnhancements = [];
     
     // Приоритеты для опций дополнения (меньшее число = более высокий приоритет)
-    const enhancementPriorities = {
-      "high detailed": 100, // Всегда в конце
-      "in anime style": 20,
-      "watercolor style": 30,
-      "photorealistic": 10,
-      "oil painting": 40,
-      "cinematic lighting": 50
-    };
+    // Теперь приоритеты считываются из HTML-атрибутов data-priority
+    let enhancementPriorities = {};
     
     // Функция для обновления счетчика выбранных опций
     function updateEnhanceCount() {
@@ -578,6 +584,13 @@ function toBase64(file) {
     
     // Функция для загрузки выбранных опций из localStorage
     function loadEnhancements() {
+      // Загружаем приоритеты из HTML-атрибутов
+      document.querySelectorAll('.enhance-option').forEach(option => {
+        const value = option.getAttribute('data-value');
+        const priority = parseInt(option.getAttribute('data-priority') || '999', 10);
+        enhancementPriorities[value] = priority;
+      });
+      
       const saved = localStorage.getItem('selectedEnhancements');
       if (saved) {
         selectedEnhancements = JSON.parse(saved);
@@ -727,6 +740,35 @@ function toBase64(file) {
         
         if (file && file.type.startsWith('image/')) {
           handleImageFile(file);
+          
+          // Загружаем изображение на хостинг сразу после добавления через drag-and-drop
+          // чтобы оно было готово к использованию при генерации
+          (async function() {
+            try {
+              const uploadBtn = document.getElementById('generateBtn');
+              const originalText = uploadBtn.innerHTML;
+              uploadBtn.innerHTML = '<span>Загружаем изображение...</span>';
+              uploadBtn.disabled = true;
+              
+              uploadedImageUrl = await uploadImageToFreeImage(file);
+              
+              uploadBtn.innerHTML = originalText;
+              uploadBtn.disabled = false;
+              
+              // Обновляем информацию в превью
+              const previewInfo = document.querySelector('.image-preview-info');
+              if (previewInfo) {
+                previewInfo.textContent = 'Изображение загружено и готово к использованию';
+              }
+            } catch (error) {
+              console.error('Ошибка при загрузке изображения:', error);
+              alert('Не удалось загрузить изображение. Пожалуйста, попробуйте еще раз.');
+              
+              const uploadBtn = document.getElementById('generateBtn');
+              uploadBtn.innerHTML = '<span>Сгенерировать</span>';
+              uploadBtn.disabled = false;
+            }
+          })();
         }
       }
     });
