@@ -10,28 +10,40 @@
   color: #e0e0e0;
   min-height: 100vh;
   overflow-x: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.5) rgba(0, 0, 0, 0.2);
 }
 
 /* Стилизация скроллбара для всего сайта */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+    width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+    background: #282828;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(41, 41, 41, 0.5);
-  border-radius: 4px;
+    background: #573f83;
+    border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(102, 126, 234, 0.7);
+    background: #30497d
+}
+
+::placeholder {
+    color: #cdcdcd;
+}
+
+:focus-visible {
+    outline: 1px solid #0080ff00;
+}
+
+::-webkit-inner-spin-button {
+    appearance: none;
+}
+
+::-webkit-resizer {
+  background: linear-gradient(135deg, #181818 50%, #7b7b7b 50%); /* Диагональный градиент */
 }
 
     .container {
@@ -69,6 +81,8 @@
       gap: 30px;
       margin-bottom: 50px;
       animation: fadeInUp 0.8s ease-out 0.2s both;
+      z-index: 9999;
+      position: relative;
     }
 
     .control-panel {
@@ -412,6 +426,10 @@
     transition: none;
 }
 
+#prompt::-webkit-scrollbar-track {
+    background: transparent;
+}
+
 /* Стили для кнопки референса и улучшения промта */
 .reference-btn:hover, .improve-prompt-btn:hover {
     background: rgba(50, 50, 50, 0.8);
@@ -689,7 +707,8 @@
 
     @media (max-width: 1024px) {
       .main-content {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column-reverse;
       }
       
       .control-panel {
