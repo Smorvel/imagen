@@ -123,7 +123,7 @@ let historyList = [];
         // Создаем промис с таймаутом для Pollinations API
         const pollinationsPromise = new Promise(async (resolve, reject) => {
           try {
-            const pollinationsUrl = `https://text.pollinations.ai/${encodeURIComponent(text)}?model=openai&private=true&system=You%20are%20a%20translator.%20Any%20text%20that%20is%20sent%20to%20you%20must%20be%20replied%20to%20in%20English,%20only%20the%20translated%20text`;
+            const pollinationsUrl = `https://text.pollinations.ai/${encodeURIComponent(text)}?model=gpt-5-nano&private=true&system=You%20are%20a%20translator.%20Any%20text%20that%20is%20sent%20to%20you%20must%20be%20replied%20to%20in%20English,%20only%20the%20translated%20text`;
             
             const response = await fetch(pollinationsUrl);
             if (!response.ok) {
@@ -777,7 +777,7 @@ function toBase64(file) {
     async function improvePrompt(prompt) {
       try {
         const seed = getRandomSeed();
-        const url = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai&seed=${seed}&private=true&system=You%20are%20an%20image%20generation%20improver.%20Send%20any%20text%20sent%20to%20you%20in%20an%20improved%20form%20for%20image%20generation.%20Send%20your%20reply%20in%20the%20same%20language%20in%20which%20the%20text%20was%20sent%20to%20you`;
+        const url = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=gpt-5-nano&seed=${seed}&private=true&system=You%20are%20an%20image%20generation%20improver.%20Send%20any%20text%20sent%20to%20you%20in%20an%20improved%20form%20for%20image%20generation.%20Send%20your%20reply%20in%20the%20same%20language%20in%20which%20the%20text%20was%20sent%20to%20you`;
         
         const response = await fetch(url);
         if (!response.ok) {
