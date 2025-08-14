@@ -777,7 +777,7 @@ function toBase64(file) {
     async function improvePrompt(prompt) {
       try {
         const seed = getRandomSeed();
-        const url = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=gpt-5-nano&seed=${seed}&private=true&system=You%20are%20an%20image%20generation%20improver.%20Send%20any%20text%20sent%20to%20you%20in%20an%20improved%20form%20for%20image%20generation.%20Send%20your%20reply%20in%20the%20same%20language%20in%20which%20the%20text%20was%20sent%20to%20you`;
+        const url = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=gpt-5-nano&seed=${seed}&private=true&system=You%20are%20an%20image%20generation%20improver.%20Send%20any%20text%20sent%20to%20you%20in%20an%20improved%20form%20for%20image%20generation.%20Send%20your%20reply%20in%20the%20same%20language%20in%20which%20the%20text%20was%20sent%20to%20you.%20One%20ready-made%20improved%20prompt%20at%20a%20time.`;
         
         const response = await fetch(url);
         if (!response.ok) {
