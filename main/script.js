@@ -237,8 +237,8 @@ function toBase64(file) {
         url = `https://image.pollinations.ai/prompt/${encoded}?private=true&nologo=true&enhance=${enhance}&model=kontext&transparent=true&token=${POLLINATIONS_TOKEN}&seed=${seed}&image=${encodeURIComponent(imageUrl)}`;
       } else {
         // Regular generation
-        url = `https://enter.pollinations.ai/api/generate/image/${encoded}?model=flux&seed=${seed}&nologo=true&private=true`;
-        if (enhance) url += "&key=plln_pk_DSf8DvxaLKn2LbP9QQAlA5hFpQGXePYiSY1AHZQn2CiKgtO7VBKQ1FNw1xCEpRYK&enhance=true";
+        url = `https://enter.pollinations.ai/api/generate/image/${encoded}?model=flux&seed=${seed}&nologo=true&private=true&key=plln_pk_DSf8DvxaLKn2LbP9QQAlA5hFpQGXePYiSY1AHZQn2CiKgtO7VBKQ1FNw1xCEpRYK`;
+        if (enhance) url += "enhance=true";
       }
       
       return url;
