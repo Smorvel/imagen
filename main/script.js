@@ -107,9 +107,8 @@ let historyList = [];
 
     function getRandomSeed() {
       const length = Math.floor(Math.random() * 10) + 1;
-      const sign = Math.random() < 0.5 ? -1 : 1;
       const digits = Array.from({ length }, () => Math.floor(Math.random() * 10)).join('');
-      return sign * parseInt(digits, 10);
+      return parseInt(digits, 10);
     }
 
     async function translateIfCyrillic(text) {
